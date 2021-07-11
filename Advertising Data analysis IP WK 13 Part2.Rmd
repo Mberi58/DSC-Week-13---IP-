@@ -1,0 +1,592 @@
+---
+title: "Week 13 IP"
+author: "Ann Mberi"
+date: "7/10/2021"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+## 1. INTRODUCTION
+
+### 1.1 Defining the Question
+My work is to identify which factors determine whether a user clicks on an ad or not.
+
+### 1.2 Setting the Metric for Success
+The project will be considered a success when I am able to identify what makes a user more likely to click on an ad.
+
+### 1.3 Outlining the Context
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. She would now like to employ your services as a Data Science Consultant to help her identify which individuals are most likely to click on her ads.
+
+### 1.4 Drafting the Experimental Design
+1. Define the question, set the metric for success, outline the context, drafting the experimental design, and determining the appropriateness of the data.
+2. Load the dataset and previewing it.
+3. Check for missing and duplicated values and deal with them where necessary.
+4. Check for outliers and other anomalies and deal with them where necessary.
+5. Perform univariate and bivariate analysis.
+6. Conclude and provide insights on how this project can be improved.
+
+
+
+# Import Libraries 
+
+install.packages("foreign")
+library(foreign)
+install.packages("car")
+install.packages("Hmisc")
+install.packages("reshape")
+library(dplyr)
+
+## Loading the Dataset
+
+```{r}
+df <- read.csv("http://bit.ly/IPAdvertisingData")
+```
+
+
+## Previewing the dataset 
+
+```{r}
+head(df) #The first 6 rows 
+```
+
+
+# checking the shape of the dataset
+```{r}
+dim(df)
+```
+
+## Tidying the Dataset
+
+# Finding any null values in the data
+```{r}
+colSums(is.na(df))
+```
+
+# Lets check to see the specific number of missing values in our data
+
+```{r}
+sum(is.na(df))
+```
+
+We have no missing values 
+
+# Checking for any duplicates 
+```{r}
+unique_items <- df[duplicated.default(df), ]
+unique_items
+```
+
+There were no duplicated values in our data 
+
+
+# checking for outliers precisely on the continuous variables
+
+```{r}
+cont_cols <- df[c('Daily.Time.Spent.on.Site','Age', 'Daily.Internet.Usage')]       
+boxplot(cont_cols, main='BoxPlots')
+```
+
+
+# checking outliers for the Area Income 
+
+```{r}
+boxplot(df$Area.Income,xlab= 'Area.Income', main='boxplot')
+```
+
+There are outliers in the area income variable, this may be due to disparities in currencies between different countries
+
+
+# PERFORMING EDA
+## UNIVARIATE ANALYSIS
+
+```{r}
+summary(df)
+library(psych)
+describe(df)
+```
+
+# We calculate the means
+
+```{r}
+colMeans(df[sapply(df,is.numeric)])
+```
+ From our observation we can see 
+ 
+ 1. The time spent on site  on average is 65
+ 2. Average age of the user is 36 years
+ 3. Also we see that the average area income is 55000
+ 
+ 
+# Mode 
+# creating the function for mode
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+apply(df,2,getmode)
+```
+# Obeservation 
+1. The most common age of the users is 31 years
+2. The most common gender in the data is male. 
+3. The City with the most repeat users is Lisamouth
+4. The country that's most repeated is Czech Republic
+
+
+# getting the median of the various numeric variables
+```{r}
+apply(df[ , c(1:4, 7, 10)],2,median)
+
+```
+
+# Range 
+```{r}
+apply(df[ , c(1:4, 7, 10)],2,range)
+```
+
+# Quantile 
+```{r}
+apply(df[ , c(1:4, 7, 10)],2,IQR)
+```
+
+# VARIANCE 
+```{r}
+apply(df[ , c(1:4, 7, 10)],2,var)
+```
+
+# Standard Deviation 
+```{r}
+apply(df[ , c(1:4, 7, 10)],2,sd)
+```
+
+# Lets create a dataframe for those who clicked the ad 
+
+```{r}
+clicks <- df[df$Clicked.on.Ad==1,]
+head(clicks)
+```
+
+# Bar plot
+## We view per gender those who clicked ads
+
+```{r}
+gender_dist<- table(clicks$Male)
+label<- c("female","male")
+barplot(gender_dist,names.arg=label,main="gender distribution")
+```
+
+# We now view based on age distribution 
+```{r}
+age_dist<- table(clicks$Age)
+barplot(age_dist,main="age distribution")
+```
+
+# Histogram 
+# Lets view based on Area income 
+
+```{r}
+hist(clicks$Area.Income)
+```
+
+# Observations 
+1. People aged 45 had the most clicks among all closely followed by those aged 36 and 38 years.
+2. We had more females to  males counterparts in the number of ads clicked.
+3. The areas that have an income between 40000 and 60000 have the most clicks on the ads
+
+# Bivariate Analysis 
+## Lets observe  correlation heatmap for the numerical columns in our dataset 
+
+```{r}
+cor(df[sapply(df,is.numeric)])
+```
+
+## Covariance
+
+```{r}
+cov(df[ , c(1:4, 10)])
+```
+As listed above there are varaibles where there are negative and positive covariances.The negative covariances indicate that as one variable increases,the second variable tends to decrease
+
+## Correlation matrix
+
+```{r}
+library('corrplot')
+```
+
+
+```{r}
+corrplot(cor(df[ , c(1:4, 10)]), method = 'number',type='lower',tl.srt = 0, main="correlation matrix" )
+```
+# Observations 
+
+ * The 'daily internet usage' and 'daily time spent on site' have a negative strong correlation on the 'click on ad' variable.
+* the area income also has a moderate negative correlation on the click on ad variable
+
+
+# Scatter Plots 
+### Daily time spent 
+```{r}
+plot(df$Clicked.on.Ad, df$Daily.Time.Spent.on.Site, xlab="Clicked on Ad", ylab="Daily time spent on site")
+```
+
+### Age
+
+```{r}
+plot(df$Clicked.on.Ad, df$Age, xlab="Clicked on Ad", ylab="Age")
+```
+
+
+### Daily time spent 
+
+```{r}
+plot(df$Daily.Time.Spent.on.Site, df$Age, xlab="Daily.Time.Spent.On.Site", ylab="Age")
+```
+
+
+
+### Area income 
+
+```{r}
+plot(df$Clicked.on.Ad, df$Area.Income, xlab="Clicked on Ad", ylab="Area Income")
+```
+
+# Conclusion
+We built a profile of an individual most likely to click on the ad. That is a female between the age of 35-45 years. MOst probably from Australia, Ethiopia or Turkey.
+
+
+
+# 6. Modelling 
+## Feature Engineering
+
+### We preview our dataset 
+
+```{r}
+head(df)
+```
+
+### We drop some columns that we wont be using, the irrelevant ones 
+
+
+
+```{r}
+df[,7:9] <- sapply(df[,7:9], as.character)
+df[,7:9] <- sapply(df[,7:9], as.numeric)
+head(df)
+```
+
+
+
+```{r}
+df$Male <- as.numeric(as.character(df$Male))
+head(df)
+```
+
+
+#dropping the year, country, city and ad topic line columns
+```{r}
+df$Ad.Topic.Line <- NULL
+df$City <- NULL
+df$Country <- NULL
+df$Year <- NULL
+df$Timestamp <- NULL
+head(df)
+```
+
+```{r}
+# Normalizing the dataset so that no particular attribute 
+# has more impact on modeling algorithm than others.
+normalize <- function(x){
+  return ((x-min(x)) / (max(x)-min(x)))
+}
+#data$Age<- normalize(data$Age)
+df$Daily.Time.Spent.on.Site<- normalize(df$Daily.Time.Spent.on.Site)
+df$Age<- normalize(df$Age)
+df$Area.Income<- normalize(df$Area.Income)
+df$Daily.Internet.Usage<- normalize(df$Daily.Internet.Usage)
+df$Male<- normalize(df$Male)
+df$Clicked.on.Ad <-normalize(df$Clicked.on.Ad)
+
+head(df)
+```
+
+## Decision Trees
+
+y_train – represents dependent variable.
+x_train – represents independent variable
+x – represents training data
+
+##  Modeling
+
+
+###  Supervised Learning
+
+This is the modeling where there is features/independent and target/label/dependent variables.
+
+
+## Feature Engineering
+
+
+
+```{r}
+#installing libraries to help in computation
+library(lattice)
+library(caret)
+```
+
+```{r}
+#previewing the dataset
+#
+head(df)
+```
+
+
+##checking dataset datatype
+
+```{r}
+str(df)
+```
+
+
+##converting charatcter varaible to factors
+
+```{r}
+#loading libraries
+library(caret)
+library(lattice)
+library(ggplot2)
+library(e1071)
+```
+
+ our data has numerical data types.
+
+
+
+
+# Lets ensure the results are repeatable
+```{r}
+set.seed
+```
+
+
+# load the library
+```{r}
+library(caret)
+```
+
+# calculate correlation matrix
+```{r}
+correlationMatrix <- cor(df[,1:6])
+```
+
+```{r}
+# summarize the correlation matrix
+print(correlationMatrix)
+# find attributes that are highly corrected (ideally >0.75)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.5)
+# print indexes of highly correlated attributes
+print(highlyCorrelated)
+```
+
+### Let’s build a correlation matrix to understand the relation between each attributes
+```{r}
+corrplot(cor(df), type = 'upper', method = 'number', tl.cex = 0.9)
+```
+##observation: 
+There is no variable above correlation of 0.75. thus we can continue with the modeling.
+
+
+## Decision Trees
+
+
+```{r}
+# shuffling our data set to randomize the records
+shuffle_index <- sample(1:nrow(df))
+df <- df[shuffle_index, ]
+#
+#previewing the dimension
+dim(df)
+#
+#previewing the dataset
+head(df)
+```
+our dataset has been reshuffled to avoid bias.
+
+
+## We Normalize the numerical data 
+### This feature is of paramount importance since the scale used for the values for each variable might be different. The best practice is to normalize the data and transform all the values to a common scale.
+###normalizing the input/indepedent variables to ensure all the data are on the same scale
+
+```{r}
+# Normalizing the dataset 
+normalize <- function(x){
+  return ((x-min(x)) / (max(x)-min(x)))
+}
+df$Daily.Time.Spent.on.Site <- normalize(df$Daily.Time.Spent.on.Site)
+df$Age <- normalize(df$Age)
+df$Area.Income <- normalize(df$Area.Income)
+df$Male <- normalize(df$Male)
+#
+#previewing normalized dataset
+head(df)
+```
+now our dataset is on the same scale.
+# splitting our data into training and testing sets
+# we will split it 70:30
+
+### Lets check using the variable'radius' whether the data has been normalized 
+
+```{r}
+summary(df$radius)
+```
+
+```{r}
+intrain <- createDataPartition(y = df$Clicked.on.Ad, p = 0.7, list = FALSE)
+training <- df[intrain,]
+testing <- df[-intrain,]
+```
+
+# checking the dimensions of our training and testing sets
+```{r}
+dim(training)
+dim(testing)
+```
+700 of data will be used for training while 300 will be for testing.
+
+# checking the dimensions of our split
+```{r}
+prop.table(table(df$Clicked.on.Ad)) * 100
+prop.table(table(training$Clicked.on.Ad)) * 100
+prop.table(table(testing$Clicked.on.Ad)) * 100
+```
+observation: the target data is equal in dataset,training set and test set.
+
+
+##fitting and training the decision tree model
+```{r}
+library(rpart)
+library(rpart.plot)
+# fitting and training the model using the decision tree classifier
+fit <- rpart(Clicked.on.Ad ~ ., data = training, method = 'class')
+rpart.plot(fit, extra = 106)
+```
+
+```{r}
+## making predictions
+p <- predict(fit, df, type = "class")
+#
+# comparing predicted values to actual results
+pred <- table(p, df$Clicked.on.Ad)
+pred
+```
+The model correctly classified 489 as '0' and 465 as '1' Clicked.on.Ad values. However, it also incorrectly classified 35  Clicked.on.Ad values as '1' and 11  Clicked.on.Ad values as '0'.
+
+
+##getting the model accuracy. 
+```{r}
+# calculating the accuracy
+accuracy_Test <- sum(diag(pred)) / sum(pred)
+print(paste('Accuracy:', accuracy_Test))
+```
+The model has an accuracy of 95%
+
+#Hyperparameter Tuning
+```{r}
+# Adjusting the maximum depth as well as minimum  sample of a node
+accuracy_tune <- function(fit) {
+    predict_unseen <- predict(fit, testing, type = 'class')
+    table_mat <- table(testing$Clicked.on.Ad, predict_unseen)
+    accuracy_Test <- sum(diag(table_mat)) / sum(table_mat)
+    accuracy_Test
+}
+control <- rpart.control(minsplit = 4,
+    minbucket = round(5 / 3),
+    maxdepth = 3,
+    cp = 0)
+tune_fit <- rpart(Clicked.on.Ad~., data = training, method = 'class', control = control)
+accuracy_tune(tune_fit)
+
+
+trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3)
+```
+
+# Challenging the Question
+## We fit the model usin the linear kernel 
+## The data is also scaled and centered 
+```{r}
+svm_Linear <- train(Clicked.on.Ad ~., data = training, method = "svmLinear", trControl = trctrl, 
+preProcess = c("center", "scale"),
+tuneLength = 10)
+```
+```{r}
+svm_Linear
+```
+
+### Lets support vector machines with linear kernel 
+## 
+### Lets take a sample of 700 
+
+
+```{r}
+test_pred <- predict(svm_Linear, df = testing)
+test_pred
+
+```
+### Lets check the accuracy of the model 
+
+```{r}
+library(caret)
+library(e1071)
+library(dplyr)
+```
+
+```{r}
+intrain <- createDataPartition(y = df$Clicked.on.Ad, p= 0.7, list = FALSE)
+training <- df[intrain,]
+testing <- df[-intrain,]
+```
+
+```{r}
+dim(training)
+dim(testing)
+```
+
+
+#building our model
+
+
+```{r}
+trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3)
+```
+
+```{r}
+svm_Linear <- train(Clicked.on.Ad ~., data = training, method = "svmLinear",
+trControl=trctrl,
+preProcess = c("center", "scale"),
+tuneLength = 10)
+```
+
+```{r}
+svm_Linear
+```
+
+
+```{r}
+#making predictions
+test_pred <- predict(svm_Linear, df = testing)
+test_pred
+```
+
+
+#checking accuracy of model
+
+confusionMatrix[table(test_pred, testing$Clicked.on.Ad)]
+
+SVM Linear Kernek midel has an accuracy score of 96%. Comparison between the two, the SVM Kernel model performs the best. 
+
+# Conclusion 
+1. In conclusion, the best advice to the owner of the blog is to use sqm to predict whether the users will click the ad or not . 
+2. Neither age nor gender do not determine whether an individual clicks on an ad. 
+3. I was able to achieve the metric of success both havin accuracy score of above 85%

@@ -1,0 +1,679 @@
+---
+title: "Ecommerce Customer Dataset"
+author: "Ann Mberi"
+date: "7/11/2021"
+output: html_document
+---
+
+1. PROBLEM DEFINITION
+1.1 Defining the Question
+
+#a) Specifying the Data Analytic Question
+
+Kira Plastinina is a Russian brand that is sold through a defunct chain of retail stores in Russia, Ukraine, Kazakhstan, Belarus, China, Philippines, and Armenia. The brand’s Sales and Marketing team would like to understand their customer’s behavior from data that they have collected over the past year. More specifically, they would like to learn the characteristics of customer groups.
+
+#b) Defining the Metric for Success
+
+* Perform clustering stating insights drawn from analysis and visualizations.
+* Upon implementation, provide comparisons between the approaches learned this week i.e. K-Means clustering vs Hierarchical clustering, 
+highlighting the strengths and limitations of each approach in the context of your analysis.
+
+#c) Understanding the context
+
+understanding customer behavior is relevant to a business since it helps in determining sales distributions
+
+#d) Recording the Experimental Design
+
+Problem Definition
+Data Sourcing
+Check the Data
+Perform Data Cleaning
+Perform Exploratory Data Analysis  (Univariate, Bivariate & Multivariate)
+Implement the Solution
+Challenge the Solution
+Follow up Questions
+
+#e) Data Relevance
+
+The dataset for this Independent project can be found here [http://bit.ly/EcommerceCustomersDataset]
+
+
+2. DATA SOURCING 
+
+```{r}
+df <- read.csv("http://bit.ly/EcommerceCustomersDataset")
+```
+## Previewing the Dataset 
+
+```{r}
+head(df) # the first 6 rows 
+
+```
+
+```{r}
+tail(df) # The 6 last rows
+```
+ 
+
+# Checking the shape of the dataset
+```{r}
+dim(df)
+```
+## Checking whether each column has an apporopriate datatype 
+```{r}
+str(df)
+```
+```{r}
+names(df)
+```
+
+# Tidying the Dataset
+##Finding any null values in the data
+
+```{r}
+colSums(is.na(df))
+```
+
+ 
+## Lets check to see the specific number of missing values in our data
+```{r}
+sum(is.na(df))
+```
+
+
+## We remove missing values 
+```{r}
+df <- na.omit(df)
+```
+
+```{r}
+dim(df)
+```
+
+
+
+## Checking for any duplicates
+```{r}
+anyDuplicated(df)
+```
+## Lets remove the duplicates 
+```{r}
+df <- unique(df)
+```
+
+```{r}
+dim(df)
+```
+
+There were no duplicated values in our data
+```{r}
+names(df)
+```
+
+## checking for outliers precisely on the continuous variables
+```{r}
+cont_cols <- df[c("Administrative", "Administrative_Duration", "Informational", "Informational_Duration", "ProductRelated", "ProductRelated_Duration", "BounceRates", "ExitRates", "PageValues", "SpecialDay", "OperatingSystems", "Browser", "Region", "TrafficType")]       
+boxplot(cont_cols, main='BoxPlots')
+```
+###we have outliers in our dataset but we won't deal with them now since the data maybe relevant
+
+# PERFORMING EDA 
+## UNIVARIATE  ANALYSIS
+## Measures of dispersion
+```{r}
+summary(df)
+```
+
+## MEANS 
+```{r}
+colMeans(df[sapply(df,is.numeric)])
+```
+
+# MODE 
+## Creating the function for mode 
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+apply(df,2,getmode)
+```
+
+# MEDIAN OF THE VARIOUS NUMERIC VARIABLES 
+
+```{r}
+apply(df[ , c(1:15)],2,median)
+```
+
+# RANGE 
+```{r}
+apply(df[ , c(1:15)],2,range)
+```
+
+# QUANTILE
+```{r}
+quantile(df$Administrative)
+quantile(df$Administrative_Duration)
+quantile(df$Informational)
+quantile(df$Informational_Duration)
+quantile(df$ProductRelated)
+quantile(df$ProductRelated_Duration)
+quantile(df$BounceRates)
+quantile(df$ExitRates)
+quantile(df$PageValues)
+quantile(df$SpecialDay)
+```
+
+
+# VARIANCE 
+
+```{r}
+apply(df[ , c(1:15)],2,var)
+```
+
+# STANDARD DEVIATION
+
+```{r}
+apply(df[ , c(1:15)],2,sd)
+```
+
+### categorical Columns 
+#### Frequency Tables 
+### a. Month
+```{r}
+month.freq <- table(df$Month)
+sort(month.freq, decreasing = TRUE)[1:5]
+```
+
+
+# We draw a Bar chart to show frequency distribution of months 
+```{r}
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(month.freq), main="A barchart of months.",
+        xlab="months",
+        ylab="frequency",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("blue"))
+```
+### b, Operating systems 
+
+```{r}
+os.freq <- table(df$OperatingSystems)
+sort(os.freq, decreasing = TRUE)[1:5]
+```
+
+#Bar chart to show frequency distribution of operating systems
+```{r}
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(os.freq), main="A barchart of operating systems.",
+        xlab="operating systems",
+        ylab="frequency",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("grey"))
+```
+### c. Browser r
+```{r}
+browser.freq <- table(df$Browser)
+sort(browser.freq, decreasing = TRUE)[1:5]
+```
+
+#Bar chart to show frequency distribution of browsers 
+```{r}
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(browser.freq), main="A barchart of browser.",
+        xlab="browser",
+        ylab="frequency",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("blue"))
+```
+###d. Region
+```{r}
+region.freq <- table(df$Region)
+sort(region.freq, decreasing = TRUE)[1:5]
+```
+
+#Bar chart to show frequency distribution of regions 
+```{r}
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(region.freq), main="A barchart of regions.",
+        xlab="region",
+        ylab="frequency",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("maroon"))
+```
+### e. Traffic Type
+
+```{r}
+traffic.freq <- table(df$TrafficType)
+sort(traffic.freq, decreasing = TRUE)[1:5]
+```
+
+#Bar chart to show frequency distribution of traffic type 
+```{r}
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(traffic.freq), main="A barchart of traffic type.",
+        xlab="traffic type",
+        ylab="frequency",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("red"))
+```
+### f. Visitor Type 
+
+```{r}
+visitor.freq <- table(df$VisitorType)
+sort(visitor.freq, decreasing = TRUE)[1:5]
+```
+
+#Bar chart to show frequency distribution of visitor type 
+```{r}
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(visitor.freq), main="A barchart of visitor types.",
+        xlab="visitor types",
+        ylab="frequency",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("green"))
+```
+### g. Weekend
+#frequency table of weekend
+```{r}
+weekend.freq <- table(df$Weekend)
+sort(weekend.freq, decreasing = TRUE)[1:5]
+```
+
+#Bar chart to show frequency distribution of weekend 
+```{r}
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(weekend.freq), main="A barchart of weekend.",
+        xlab="weekend",
+        ylab="frequency",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("blue", "red"))
+```
+### h. Revenue 
+```{r}
+rev.freq <- table(df$Revenue)
+sort(rev.freq, decreasing = TRUE)[1:5]
+```
+
+#Bar chart to show frequency distribution of revenue 
+```{r}
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(rev.freq), main="A barchart of revenue.",
+        xlab="revenue",
+        ylab="frequency",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("grey", "orange"))
+```
+
+## Categorical Variables 
+
+
+```{r}
+par(mfrow = c(3,3))
+barplot(sort(table(df$Month), decreasing=T))
+barplot(sort(table(df$OperatingSystems), decreasing=T))
+barplot(sort(table(df$Browser), decreasing=T))
+barplot(sort(table(df$Region), decreasing=T))
+barplot(sort(table(df$TrafficType), decreasing=T))
+barplot(sort(table(df$VisitorType), decreasing=T))
+barplot(sort(table(df$Weekend), decreasing=T))
+barplot(sort(table(df$Revenue), decreasing=T))
+```
+
+## Numerical Variables 
+### Histogram
+
+
+
+```{r}
+par(mfrow = c(3,3))
+hist(df$Administrative, main = "Administrative", xlab ="Administrative", col = "grey")
+hist(df$Administrative_Duration, main = "Administrative_Duration", xlab ="Administrative_Duration", col = "red")
+hist(df$Informational_Duration, main = "Informational Duration", xlab ="Informational Duration", col = "black")
+hist(df$Informational, main = "Informational", xlab ="Informational", col = "orange")
+hist(df$ProductRelated, main = "ProductRelated", xlab ="Product Related", col = "pink")
+hist(df$ProductRelated_Duration, main = "_Product Related Duration", xlab ="ProductRelated ", col = "pink")
+hist(df$BounceRates, main = "Bounce Rates", xlab ="Bounce Rates", col = "blue")
+hist(df$ExitRates, main = "Exit Rates", xlab ="Exit Rates", col = "green")
+hist(df$PageValues, main = "Page Values", xlab ="Page Values", col = "pink")
+```
+
+     
+# BIVARIATE ANALYSIS
+##Lets observe correlation heatmap for the numerical columns in our dataset
+
+```{r}
+cor(df[sapply(df,is.numeric)])
+```
+
+##Covariance
+
+
+## Finding the covariance and Correlation
+```{r}
+cov <- cov(df[,unlist(lapply(df, is.numeric))])
+cov
+
+
+cor <- cor(df[, unlist(lapply(df, is.numeric))])
+cor
+```
+
+
+
+
+```{r}
+#selecting the true values from the revenue column
+revenue <- df[df$Revenue == 'TRUE',]
+head(revenue)
+dim(revenue)
+```
+As listed above there are varaibles where there are negative and positive covariances.The negative covariances indicate that as one variable increases,the second variable tends to decrease
+
+
+## Correlation matrix
+```{r}
+library('corrplot')
+```
+
+
+```{r}
+corrplot(cor(df[ , c(1:4, 10)]), method = 'number',type='lower',tl.srt = 0, main="correlation matrix" )
+```
+
+## Pair the plots
+```{r}
+pairs(df[, 1:10])
+```
+
+#Plotting a heat map using the correlation matrix
+```{r}
+heatmap(x=cor, symm=TRUE)
+```
+
+
+#Plotting a correlogram
+```{r}
+#Plotting a correlogramlibrary('corrplot')
+corrplot(cor, type='upper', order='hclust', tl.color='black', tl.srt=45)
+```     
+     
+
+
+# Implementing The Solution 
+## Feature engineering 
+
+We will perform clustering stating insights drawn from your analysis and visualizaations upon which we will provide comparisons between  K-Means clustering vs Hierachical clustering highlighting the strengths and limitations of each approach in the context of our analysis 
+
+## Unsupervised Learning 
+
+### We remove columns we wont be using in our analysis 
+Unsupervised learning requires data that has no labels. So we will create a new dataset that does not have the "Revenue" column.
+
+
+
+## prieveing the dataset to be used
+```{r}
+#previewing the dataset
+head(df)
+```
+
+
+## removing the target/label variable "Revenue"
+```{r}
+df1 <- df[, -14]
+df1.revenue <- df[, "Revenue"]
+head(df1)
+```
+observation;the dataset to be used contains 13 colunms, this is after dropping the target variable.
+# Previewing the revenue column
+
+```{r}
+head(df1.revenue)
+```
+observation: this is the removed target variable.
+
+```{r}
+df1[,12:15] <- sapply(df1[,12:15], as.character)
+df1[,12:15] <- sapply(df1[,12:15], as.numeric)
+head(df1)
+```
+
+
+## Encoding factor columns 
+```{r}
+library(caret)
+```
+
+```{r}
+dmy = dummyVars(" ~ .", data = df1)
+df1.encod = data.frame(predict(dmy, newdata = df1))
+
+
+str(df1.encod)
+dim(df1.encod)
+```
+
+# Normalizing our data
+```{r}
+normalize <- function(x){
+  return ((x-min(x)) / (max(x)-min(x)))
+}
+normalize(df1.encod)
+```
+
+
+
+
+
+
+## converting factors to numerical for modeling
+```{r}
+df1$Month <- as.numeric(df1$Month)
+df1$OperatingSystems <- as.numeric(df1$OperatingSystems)
+df1$Browser <- as.numeric(df1$Browser)
+df1$TrafficType <- as.numeric(df1$TrafficType)
+df1$VisitorType <- as.numeric(df1$VisitorType)
+df1$Weekend <- as.numeric(df1$Weekend)
+```
+
+## checking the new datatypes
+
+```{r}
+str(df1)
+```
+observation: now our dataset all datatypes are numerical and integers.
+
+
+```{r}
+# checking for missing values
+anyNA(df1)
+```
+
+
+
+```{r}
+# dataset summary
+#
+summary(df1)
+```
+
+
+Obsservation.
+The above gives as an overview of our dataset, it show our datapoints are on different scales.
+
+## An Analyst always try to visualize the data and results, let’s visualize the cluster we have created, so far.
+## For visualization, istall library("factoextra") and library("cluster") packages
+```{r}
+# for visualization, istall library("factoextra") and library("cluster") packages
+library("factoextra")
+library("cluster")
+```
+
+
+
+
+#7. Implementing the Solution
+
+## Feature engineering
+```{r}
+#removing the revenue column
+df1 <- df[,1:17]
+head(df1)
+df.rev <- df$Revenue
+df1[,12:15] <- sapply(df1[,12:15], as.character)
+df1[,12:15] <- sapply(df1[,12:15], as.numeric)
+head(df1)
+```
+
+## Lets encoding factor columns
+
+```{r}
+library(caret)
+```
+
+```{r}
+dmy = dummyVars(" ~ .", data = df1)
+df.encod = data.frame(predict(dmy, newdata = df1))
+str(df.encod)
+dim(df.encod)
+```
+## Normalize the data 
+```{r}
+normalize <- function(x){
+  return ((x-min(x)) / (max(x)-min(x)))
+}
+normalize(df.encod)
+```
+## Lets apply the K-means clustering algorithm (k) = 3
+
+```{r}
+result<- kmeans(df.encod,10)
+```
+
+
+##  Lets preview the no. of records in each cluster
+```{r}
+result$size
+result$cluster
+result$centers
+```
+## Clustering results 
+
+```{r}
+par(mfrow = c(2,2), mar = c(5,4,2,2))
+```
+
+## Lets see how various variable data points have been distributed in clusters
+```{r}
+plot(df.encod[c(1,2,3,4,5)], col = result$cluster)
+```
+
+
+
+## Hierachical clustering
+
+### An Analyst always try to visualize the data and results, let’s visualize the cluster we have created, so far.
+### For visualization, istall library("factoextra") and library("cluster") packages
+# for visualization, istall library("factoextra") and library("cluster") packages
+
+```{r}
+install.packages("factoextra")
+install.packages("cluster")
+```
+
+```{r}
+library("factoextra")
+library("cluster")
+```
+
+
+# First we use the dist() function to compute the Euclidean distance between observations, 
+# let d be the first argument in the hclust() function dissimilarity matrix
+```{r}
+d <- dist(df.encod, method = "euclidean")
+```
+
+
+## Lets use the ward's method to analyse our data using hierarchical clustering 
+
+```{r}
+res.hc <- hclust(d, method = "ward.D2" )
+res.hc
+```
+
+## Dendroram 
+
+```{r}
+plot(res.hc, cex = 0.6, hang = -1)
+```
+
+# CHALLENGING THE QUESTION 
+
+
+
+### Importing the libraries 
+```{r}
+library('dbscan')
+```
+
+
+# We will apply DBSCAN algorithm
+# We want minimum 5 points with in a distance of eps(0.5)
+#
+
+
+```{r}
+db<-dbscan(df.encod,eps=0.5,MinPts = 5)
+db
+```
+
+## We plot our Clusters 
+
+```{r}
+hullplot(df.encod,db$cluster)
+```
+
+
+
+
+### Conclusion
+
+K- means clustering performs better than Hierarchical Clustering for this particular problem. 
+
+Hierarchical clustering was easier to implement than K-means was. Number of clusters did not need to be specified.
+
+K-means was able to scale well with the data provided. From the dendrogram, hierarchical clustering was done but due to the many variables, the bottom was too tiny to be seen.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
